@@ -66,6 +66,7 @@ omxp1.on("aboutToFinish", () => {
     sleep(1000).then(() => { 
         helloVidProc = spawn(hello_video, ["--loop", "media/mfSpace.h264"]); 
         setTimeout(fadeOut, 500);
+        running = false;
     });
 });
     
@@ -87,16 +88,32 @@ function startCliMode() {
     const readLine = require("./cli");
     readLine.recursiveAsyncReadLine(playVideo);
 }
-
+var running = false;
 // GPIO mode
 function startGpioMode() {
     console.log("Starting GPIO Mode");
     //TODO...figure dis out
+    const Gpio = require('onoff').Gpio;
+    // const led = new Gpio(17, 'out');
+    const button = new Gpio(17, 'in', 'both', {debounceTimeout: 20});
+    
+    button.watch(function (err, value) {
+         if (err) {
+            throw err;
+        }
+        console.log("off, on:" + value);
+        playVideo("h");
+    });
+
+    process.on('SIGINT', function () {
+        button.unexport();
+    });
 }
 
 function playVideo(selection) {
     
-    if (selection == "h") {
+    if (selection == "h" && !running) {
+        running = true;
         // Hyperdrive
         console.log("Opening video");
         omxp1.open('/home/pi/Desktop/MilleniumFalcon/media/MF Hyperdrive Activate.mp4', opts1);
@@ -255,7 +272,9 @@ var alpha = 0;
 function fadeIn() {
     fadeSpeed = 3;
 	if(alpha < 256){
-	    omxp1.setAlpha(alpha, function(err){console.log("fadeIn - error: " + err)});
+	    omxp1.setAlpha(alpha, function(err){
+        //    console.log("fadeIn - error: " + err)
+        });
 		alpha += fadeSpeed;
 		process.nextTick(fadeIn);
 	} else {
@@ -274,7 +293,9 @@ function fadeOut() {
         console.log("reset alpha");
     }
 	if(alpha > 0){
-	omxp1.setAlpha(alpha, function(err){console.log("fadeOut - error: " + err)});
+        omxp1.setAlpha(alpha, function(err){
+            // console.log("fadeOut - error: " + err)
+        });
 		alpha -= fadeSpeed;
 		process.nextTick(fadeOut);
 	} else {
