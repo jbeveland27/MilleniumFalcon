@@ -33,10 +33,71 @@ const hello_video = "hello_video.bin";
 const spawn  = require("child_process").spawn;
 
 // Start Space Loop
-let helloVidProc = spawn(hello_video, ["--loop", "media/mfSpace.h264"]);
-helloVidProc.on("close", (code, signal) => {
-    console.log(`Child proc terminated due to receipt of signal ${signal}`);    
+// let helloVidProc = spawn(hello_video, ["--loop", "media/mfSpace.h264"]);
+// helloVidProc.on("close", (code, signal) => {
+//     console.log(`Child proc terminated due to receipt of signal ${signal}`);    
+// });
+var omxpLoop1 = require('omxplayer-controll');
+var optsLoop1 = {
+    'audioOutput': 'local', //  'hdmi' | 'local' | 'both'
+    'blackBackground': false, //false | true | default: true
+    'closeOtherPlayers': false, 
+    'disableKeys': true, //false | true | default: false
+    'disableOnScreenDisplay': true, //false | true | default: false
+    'disableGhostbox': true, //false | true | default: false
+    'maxPlayerAllowCount': 100,
+    'nativeLoop': true,
+    'subtitlePath': '', //default: ""
+    'startAt': 0, //default: 0
+    'startVolume': 0.6, //0.0 ... 1.0 default: 1.0
+    'layer': 2 //selects video render layer 2, which is.. beneath layer 3.
+};
+var flag = true;
+omxpLoop1.open('/home/pi/Desktop/MilleniumFalcon/media/MF Space.mp4', optsLoop1);
+omxpLoop1.on("aboutToFinish", () => {
+    console.log("Loop about to finish");
+    // sleep(1000).then(() => { 
+    //     if (flag) {
+    //         console.log("starting loop 2")
+    //         flag = false;
+    //         omxpLoop2.open('/home/pi/Desktop/MilleniumFalcon/media/MF Space.mp4', optsLoop2);
+    //         setTimeout(fadeOutLoop1, 500);
+    //     } else {
+    //         console.log("starting loop 1");
+    //         flag = true;
+    //         omxpLoop1.open('/home/pi/Desktop/MilleniumFalcon/media/MF Space.mp4', optsLoop1);
+    //         setTimeout(fadeOutLoop2, 500);
+    //     }
+        
+    //     // setTimeout(fadeOutLoop1, 500);
+    //     // running = false;
+    // });
 });
+
+var omxpLoop2 = require('omxplayer-controll');
+var optsLoop2 = {
+    'audioOutput': 'local', //  'hdmi' | 'local' | 'both'
+    'blackBackground': false, //false | true | default: true
+    'closeOtherPlayers': false, 
+    'disableKeys': true, //false | true | default: false
+    'disableOnScreenDisplay': true, //false | true | default: false
+    'disableGhostbox': true, //false | true | default: false
+    'maxPlayerAllowCount': 100,
+    'subtitlePath': '', //default: ""
+    'startAt': 0, //default: 0
+    'startVolume': 0.6, //0.0 ... 1.0 default: 1.0
+    'layer': 3 //selects video render layer 2, which is.. beneath layer 3.
+};
+// omxpLoop2.on("aboutToFinish", () => {
+//     console.log("Loop 2 about to finish");
+//     sleep(1000).then(() => { 
+//         omxpLoop1.open('/home/pi/Desktop/MilleniumFalcon/media/MF Space.mp4', optsLoop2);
+//         setTimeout(fadeOutLoop2, 500);
+//         // running = false;
+//     });
+// });
+
+
 
 // Start ambient Sound
 var ambientSoundProc = spawn("mpg123", ["--loop", "-1", "media/MF Ambient Sound.mp3"]);
@@ -61,14 +122,14 @@ var opts1 = {
 };
 
 // Only register this once!
-omxp1.on("aboutToFinish", () => {
-    console.log("About to finish");
-    // sleep(1000).then(() => { 
-        helloVidProc = spawn(hello_video, ["--loop", "media/mfSpace.h264"]); 
-        setTimeout(fadeOut, 500);
-        // running = false;
-    // });
-});
+// omxp1.on("aboutToFinish", () => {
+//     console.log("About to finish");
+//     sleep(1000).then(() => { 
+//         helloVidProc = spawn(hello_video, ["--loop", "media/mfSpace.h264"]); 
+//         setTimeout(fadeOut, 500);
+//         // running = false;
+//     });
+// });
     
 // console.log("Object properties: " + Object.getOwnPropertyNames(omxp1));
 // open GPIO reader and wait for input...
@@ -86,7 +147,7 @@ if (argv.mode == "gpio") {
 function startCliMode() {
     console.log("Starting Cli Mode");
     const readLine = require("./cli");
-    readLine.recursiveAsyncReadLine(playVideo, running);
+    readLine.recursiveAsyncReadLine(playVideo);
 }
 
 // Only want video to play one at a time, so this global running state will help with that
@@ -107,8 +168,6 @@ function startGpioMode() {
         if (!running) {
             running = true;
             playVideo("h");
-        } else {
-            console.log("Cannot start playback yet - video still running.");
         }
     });
 
@@ -307,7 +366,7 @@ function fadeOut() {
 	} else {
         omxp1.setAlpha(0, function(err){console.log(err)});
         console.log("Stopping fade out");
-        sleep(6000).then(() => {running = false;});
+        running = false;
         // omxp1.pause();
         // omxp1.setPosition(0, (error) => {
         //     console.log("Error setting position: " + error); 
@@ -323,6 +382,66 @@ function fadeOut() {
     //  else {
     //     process.nextTick(fadeIn);
 	// }
+}
+
+function fadeOutLoop1() {
+    fadeSpeed = 15;
+    if (alpha > 255) {
+        alpha = 255;
+        console.log("Alpha reset to 255");
+    }
+	if(alpha > 0){
+        omxpLoop1.setAlpha(alpha, function(err){
+            // console.log("fadeOut - error: " + err)
+        });
+		alpha -= fadeSpeed;
+		process.nextTick(fadeOut);
+	} else {
+        omxpLoop1.setAlpha(0, function(err){console.log(err)});
+        console.log("Stopping fade out");
+        running = false;
+        // omxp1.pause();
+        // omxp1.setPosition(0, (error) => {
+        //     console.log("Error setting position: " + error); 
+        // });
+        // omxp1.getPosition((error, position) => {
+        //     console.log("Position: " + position);
+        // });
+        // omxp1.getStatus((error, status) => {
+        //     console.log("Status: " + status);
+        // });
+        return;
+    }
+}
+
+function fadeOutLoop2() {
+    fadeSpeed = 15;
+    if (alpha > 255) {
+        alpha = 255;
+        console.log("Alpha reset to 255");
+    }
+	if(alpha > 0){
+        omxpLoop2.setAlpha(alpha, function(err){
+            // console.log("fadeOut - error: " + err)
+        });
+		alpha -= fadeSpeed;
+		process.nextTick(fadeOut);
+	} else {
+        omxpLoop2.setAlpha(0, function(err){console.log(err)});
+        console.log("Stopping fade out");
+        running = false;
+        // omxp1.pause();
+        // omxp1.setPosition(0, (error) => {
+        //     console.log("Error setting position: " + error); 
+        // });
+        // omxp1.getPosition((error, position) => {
+        //     console.log("Position: " + position);
+        // });
+        // omxp1.getStatus((error, status) => {
+        //     console.log("Status: " + status);
+        // });
+        return;
+    }
 }
 
 // //fading begins 5 seconds after initializing the script, as omxplayer instances may not be ready yet.

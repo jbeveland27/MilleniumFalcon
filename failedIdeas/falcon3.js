@@ -63,9 +63,14 @@ var opts1 = {
 // Only register this once!
 omxp1.on("aboutToFinish", () => {
     console.log("About to finish");
+    omxp1.getDuration(function(err, duration){ console.log("duration:" + duration); });
+    omxp1.getPosition(function(err, position){ console.log("position: " + position) ;});
+    omxp1.seek(10, (err) => {
+        console.log("seeking position");
+    });
     // sleep(1000).then(() => { 
-        helloVidProc = spawn(hello_video, ["--loop", "media/mfSpace.h264"]); 
-        setTimeout(fadeOut, 500);
+        // helloVidProc = spawn(hello_video, ["--loop", "media/mfSpace.h264"]); 
+        // setTimeout(fadeOut, 500);
         // running = false;
     // });
 });
@@ -86,7 +91,7 @@ if (argv.mode == "gpio") {
 function startCliMode() {
     console.log("Starting Cli Mode");
     const readLine = require("./cli");
-    readLine.recursiveAsyncReadLine(playVideo, running);
+    readLine.recursiveAsyncReadLine(playVideo);
 }
 
 // Only want video to play one at a time, so this global running state will help with that
@@ -107,8 +112,6 @@ function startGpioMode() {
         if (!running) {
             running = true;
             playVideo("h");
-        } else {
-            console.log("Cannot start playback yet - video still running.");
         }
     });
 
@@ -120,18 +123,53 @@ function startGpioMode() {
 function playVideo(selection) {
     
     if (selection == "h") {
-        // Hyperdrive
-        console.log("Opening video");
-        omxp1.open('/home/pi/Desktop/MilleniumFalcon/media/MF Hyperdrive Activate.mp4', opts1);
-        // omxp1.getPosition((error, position) => {
-        //     console.log("Position: " + position);
-        // });
-        setTimeout(fadeIn, 1000);
-        console.log("Starting fade timer");
-        
-        sleep(3500).then(() => {
-            helloVidProc.kill();
+        omxp1.getStatus((error, status) => {
+            if (error) {
+                console.log("Could not get Status: " + error);
+                console.log("Playing hyperdrive for 1st time");
+                console.log("Opening video");
+                omxp1.open('/home/pi/Desktop/MilleniumFalcon/media/MF Hyperdrive Activate.mp4', opts1);
+                // omxp1.getPosition((error, position) => {
+                //     console.log("Position: " + position);
+                // });
+                setTimeout(fadeIn, 1000);
+                console.log("Starting fade in");
+                
+                sleep(3500).then(() => {
+                    helloVidProc.kill();
+                });
+            } else {
+                console.log("Status: " + status);
+                if (status === "Paused") {
+                    omxp1.playPause((err) => {
+                        if (err) {
+                            console.log("Error playing hyperspeed: " + err);
+                        } else {
+                            console.log("Resuming Video Playback");
+                            console.log("Starting fade in");
+                            setTimeout(fadeIn, 1000);
+                            sleep(3500).then(() => {
+                                helloVidProc.kill();
+                            });
+                        }
+                    });
+                } else {
+                    // Hyperdrive
+                    console.log("Opening video");
+                    omxp1.open('/home/pi/Desktop/MilleniumFalcon/media/MF Hyperdrive Activate.mp4', opts1);
+                    // omxp1.getPosition((error, position) => {
+                    //     console.log("Position: " + position);
+                    // });
+                    setTimeout(fadeIn, 1000);
+                    console.log("Starting fade in");
+                    
+                    sleep(3500).then(() => {
+                        helloVidProc.kill();
+                    });
+                }
+            }
         });
+        
     }
 }
 
@@ -291,6 +329,13 @@ function fadeIn() {
 	// 	process.nextTick(fadeOut);
 	// }
 }
+omxp1.on('changeStatus', function(status) {
+    console.log('Status', JSON.stringify(status));
+    // if (status.pos < 100000000) {
+    //     omxp1.setPosition(0.95 * status.duration / 10000);
+    // }
+});
+
 
 function fadeOut() {
     fadeSpeed = 15;
@@ -300,14 +345,30 @@ function fadeOut() {
     }
 	if(alpha > 0){
         omxp1.setAlpha(alpha, function(err){
-            // console.log("fadeOut - error: " + err)
+            if (err) console.log("SetAlpha error: " + err);
         });
 		alpha -= fadeSpeed;
 		process.nextTick(fadeOut);
 	} else {
-        omxp1.setAlpha(0, function(err){console.log(err)});
+        omxp1.setAlpha(0, function(err){
+            if (err) console.log("SetAlpha error: " + err);
+        });
         console.log("Stopping fade out");
-        sleep(6000).then(() => {running = false;});
+        // omxp1.playPause(function(err){
+        //     if (err) {
+        //         console.log("Error pausing: " + err);
+        //     } else {
+        //         console.log("Paused");
+        //     }
+        // });
+        // omxp1.setPosition(0, (err) => {
+        //     if (err) {
+        //         console.log("Error setting position: " + err);
+        //     } else {
+        //         console.log("Position Reset to 0"); 
+        //     }
+        // });
+        running = false;
         // omxp1.pause();
         // omxp1.setPosition(0, (error) => {
         //     console.log("Error setting position: " + error); 

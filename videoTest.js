@@ -54,7 +54,7 @@ omxp1.open('/home/pi/Desktop/MilleniumFalcon/media/MF Hyperdrive Activate.mp4', 
 //crossfade back and forth by alpha value of 5 every frame (nextTick)
 var fadeSpeed = 5;
 
-function fadeIn(){
+function fadeIn() {
 	if(alpha < 255){
 	omxp.setAlpha(alpha, function(err){console.log(err)});
 		alpha += fadeSpeed;
@@ -64,7 +64,7 @@ function fadeIn(){
 	}
 }
 
-function fadeOut(){
+function fadeOut() {
 	if(alpha > 0){
 	omxp.setAlpha(alpha, function(err){console.log(err)});
 		alpha -= fadeSpeed;
