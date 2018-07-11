@@ -1,4 +1,5 @@
 /**
+ * Facilitates a readLine loop
  * Created by Joseph Tan on 22/05/2016.
  */
 const readline = require('readline');
@@ -22,23 +23,9 @@ function recursiveAsyncReadLine(callback) {
             if (line !== "exit") {
                 callback(line);
             } else {
-                // figure out the ps-tree kill thing...
+                // TODO: figure out the ps-tree kill to kill all child procs
                 process.exit();
             }
-               
-            // choice = line;
-            // switch (line){
-            //     case "h":
-            //         console.log("this is option 1");
-            //         break;
-            //     case "2":
-            //         console.log("this is option 2");
-            //         break;
-            //     case "3":
-            //         return rl.close();
-            //     default:
-            //         console.log("No such option. Please enter another: ");
-            // }
     recursiveAsyncReadLine(callback); //Calling this function again to ask new question
     });
 };

@@ -1,4 +1,4 @@
-# Simple test to detect if button press is working
+# Simple test to detect if button press is working on pin 17
 import RPi.GPIO as gpio
 gpio.setmode(gpio.BCM)
 gpio.setup(17, gpio.IN)
