@@ -6,7 +6,9 @@ Code that supports the Millenium Falcon build done for At the Movies (2018). Thi
 
 ## Startup
 
-The original build used a Raspberry Pi 3 Model B. The main workings are found in [falcon.js](./falcon.js) and this is set to run as a service on startup via [systemd](https://www.raspberrypi.org/documentation/linux/usage/systemd.md). The following commands can be used to control that service:
+The original build used a Raspberry Pi 3 Model B. The main workings are found in [falcon.js](./falcon.js) and this is set to run as a service on startup via [systemd](https://www.raspberrypi.org/documentation/linux/usage/systemd.md). The service file `MilleniumFalcon.service` should be in `/etc/systemd/system`.
+
+The following commands can be used to control that service:
 
 * `sudo systemctl start milleniumFalcon.service`
 * `sudo systemctl stop milleniumFalcon.service`
