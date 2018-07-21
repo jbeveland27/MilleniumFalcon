@@ -1,6 +1,6 @@
 /**
  * Usage:
- * node falcon.js --mode cli|gpio
+ * node falcon-hyperfail.js --mode cli|gpio
  * Allows for starting in cli or gpio mode. Gpio mode currently defaults to pin 17.
  * 
  * Disclaimer: I'm not much of a Node dev, so there's probably some egregious stuff
@@ -103,6 +103,7 @@ function startGpioMode() {
 var hyperfail = false;
 var successfulHyperspeedCount = 0; 
 var randomSuccesses = 0;
+
 function playVideo(selection) {
     
     /** 
@@ -113,16 +114,21 @@ function playVideo(selection) {
     //     with 60% probability of failure
     //     Once hyperfail occurs, restart the hyperfail count 
     */
-    if (successfulHyperspeedCount > 3) {
-        
-        if (Math.random() > 0.6) {
+    if (successfulHyperspeedCount >= 3) {
+        var randomDraw = Math.random();
+        console.log("Hyperfail active - checking possibility");
+        console.log("Random draw: " + randomDraw)
+
+        if (randomDraw > 0.4) {
             hyperfail = true;
         } else if (randomSuccesses == 2) {
             // At this point, 5 successful hyperspeeds have happened,
             // so force a failure on this 6th run
+            console.log("6th run -- forcing hyperfail");
             hyperfail = true;
             randomSuccesses = 0;
         } else {
+            console.log("Lucky draw -- No hyperfail yet");
             randomSuccesses += 1;
         }
     }
@@ -130,6 +136,7 @@ function playVideo(selection) {
     // Run the hyperspeed/hyperfail video
     if (selection === "h") {
         if (hyperfail) {
+            console.log("Hyperfail activated");
             successfulHyperspeedCount = 0;
             hyperfail = false; 
 
@@ -139,6 +146,9 @@ function playVideo(selection) {
             console.log("Starting fade timer");
         } else {
             successfulHyperspeedCount += 1;
+            console.log("Hyperdrive activated");
+            console.log("Successful Hyperspeed Count: " + successfulHyperspeedCount);
+
             console.log("Opening video");
             omxp1.open('./media/MF Hyperdrive Activate.mp4', opts1);
             setTimeout(fadeIn, 1000);
@@ -195,6 +205,12 @@ function fadeOut() {
 	} else {
         omxp1.setAlpha(0, function(err){console.log(err)});
         console.log("Stopping fade out");
+
+        // NOTE: This keeps the program from crashing.
+        // The playback of 2 videos at the same time seems 
+        // to tax the system too hard, so this artificial
+        // delay was added to make sure the foreground video
+        // fully fades before the background video is triggered.
         sleep(6000).then(() => {running = false;});
         return;
     }

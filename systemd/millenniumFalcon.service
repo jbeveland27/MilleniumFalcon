@@ -1,0 +1,14 @@
+[Unit]
+Description=Millenium Falcon
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/node falcon.js --mode gpio
+WorkingDirectory=/home/pi/Desktop/MilleniumFalcon
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target
